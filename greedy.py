@@ -83,7 +83,7 @@ def greedy(G, lV, lPass):
     return routeV
 
 # greedy passenger insertion" fix insertion using st path (to the same vertex)
-def greedy_quadratic(G, lV, lPass):
+def greedy_quadratic(G, lV, lPass, debug=False):
     routeV, routeP = {}, {}
     nv, npass = lV.shape[0], lPass.shape[0]
 
@@ -96,7 +96,6 @@ def greedy_quadratic(G, lV, lPass):
         mmiv1, mmiv2, mmv, mmc = None, None, None, float("Inf")
         for v in range(nv):
             rv = routeV[v]
-            print(p, sp, ep, rv)
             mv1, mc1 = None, float("Inf")
             mv2, mc2 = None, float("Inf")
             for i in range(len(rv) - 1):
@@ -115,21 +114,15 @@ def greedy_quadratic(G, lV, lPass):
                 mmv, mmiv1, mmiv2, mmc = v, mv1, mv2, mc1 + mc2
         
         # update r[mmiv]
-        print(mmv, mmiv1, mmiv2, mmc)
+        if debug:
+            print(mmv, mmiv1, mmiv2, mmc)
         rmmv = routeV[mmv]
         intI = rmmv[mmiv1]
         pIS = nx.shortest_path(G, intI, sp, weight='weight')
         intJ = rmmv[mmiv2]
         pJS = nx.shortest_path(G, ep, intJ, weight='weight')
-        newRmmv = rmmv[:mmiv1] + pIS + stp + pJS + rmmv[mmiv2:]
-        print(rmmv)
-        print(intI, pIS)
-        print(intJ, pJS)
-        print(newRmmv)
+        newRmmv = rmmv[:mmiv1] + pIS + stp[:-1] + pJS[:-1] + rmmv[mmiv2:]
         routeV[mmv] = newRmmv
-        print()
-    for v in routeV:
-        print(v, routeV[v])
     return routeV
 
 
@@ -179,8 +172,6 @@ def main(fname, npass, nv, th, fshow):
         xylPassD = pos[lPass[:, 1]]
         ax.scatter(xylPassO[:, 0], xylPassO[:, 1], color=['r', 'g', 'b'][:npass], s=S)
         ax.scatter(xylPassD[:, 0], xylPassD[:, 1], color=['r', 'g', 'b'][:npass], marker='s', s=S)
-        # for idp, p in enumerate(range(npass)):
-        #    plot_stpath(ax, pos, stP[p], color=['r', 'g', 'b'][idp])
 
         # vehicles
         xylVO = pos[lV[:, 0]]
@@ -188,11 +179,11 @@ def main(fname, npass, nv, th, fshow):
         ax.scatter(xylVO[:, 0], xylVO[:, 1], color=['c', 'm', 'y'][:nv], s=S)
         ax.scatter(xylVD[:, 0], xylVD[:, 1], color=['c', 'm', 'y'][:nv], marker='s', s=S)
 
-        # for idv, v in enumerate(range(nv)):
-        #    plot_stpath(ax, pos, stV[v], color=['c', 'm', 'y'][idv])
-
         for idv, v in enumerate(range(nv)):
             plot_stpath(ax, pos, routeV[v], color=['c', 'm', 'y'][idv])
+
+        for idv, v in enumerate(range(nv)):
+            plot_stpath(ax, pos, stV[v], color=['c', 'm', 'y'][idv], alpha=0.2, lw=5)
 
         plt.tight_layout()
         plt.show()
